@@ -2,11 +2,7 @@
 #include <cmath>
 #include <string>
 
-
 using namespace std;
-
-enum customer_type {Individual, Business};
-int customer_no{}, acc_no{}, current_customer{}, account_pointer{};
 
 class Customer{
     private:
@@ -150,7 +146,10 @@ void starting_deposit(int customer_id, Account *accounts);
 void new_customer();
 bool transfer(Account &giver, Account &receiver, double amount);
 
-int customer_counter{}, savings_account_counter{}, current_account_counter{};
+enum customer_type {Individual, Business};
+int customer_no{}, curr_acc_no = 100, sav_acc_no = 200, current_customer{};
+//Current account number start from 100, savings start from 200
+int customer_counter{};
 Customer customers[200];
 
 Savings_account savings_accounts[50];
@@ -213,9 +212,18 @@ void new_account_menu(int customer_id){
     
     switch(selection){
         case 1:{
-            current_accounts[customer_id-1].owner = customers[current_customer];
+            curr_acc_no += 1;
+            current_accounts[customer_id-1].account_no = curr_acc_no; //assign account number
+            current_accounts[customer_id-1].owner = customers[current_customer]; //assign owner
             starting_deposit(customer_id, current_accounts);
             break;
+        }
+
+        case 2:{
+            sav_acc_no += 1;
+            current_accounts[customer_id-1].account_no = sav_acc_no; //assign account number
+            current_accounts[customer_id-1].owner = customers[current_customer]; //assign owner
+            starting_deposit(customer_id, current_accounts);
         }
     }
 }
@@ -236,6 +244,7 @@ void starting_deposit(int customer_id, Account *account){
                 (account+customer_id-1)->balance = start_balance;
                 cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
                 cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
+                cout << "Acct No: " << (account+customer_id-1)->account_no << endl;
                 main_menu();
                 break;
             }
@@ -247,12 +256,16 @@ void starting_deposit(int customer_id, Account *account){
 
         case 2:{
             (account+customer_id)->balance = 0;
+            cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
+            cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
             break;
         }
                 
         default:{
             cout << "Setting starting deposit as 0 NGN" << endl;
             (account+customer_id)->balance = 0;
+            cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
+            cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
         };
     }
 }
@@ -272,7 +285,7 @@ void new_customer(){
 
     cout << "Customer\t: " << customers[customer_counter].name << endl;
     cout << "Customer id\t: " << customers[customer_counter].customer_id << endl;
-    //Display customer info
+    //Display new customer info
 
     new_account_menu(current_customer); //create account for customer
 }
