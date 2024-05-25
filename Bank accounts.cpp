@@ -4,6 +4,12 @@
 
 using namespace std;
 
+enum customer_type {Individual, Business};
+//Current account number start from 100, savings start from 200
+int  curr_acc_no = 100, sav_acc_no = 200;
+//variables for keeping track of customers
+int customer_no{}, current_customer{};
+
 class Customer{
     private:
     string fname{}, lname{};
@@ -23,15 +29,13 @@ class Customer{
 
     void set_name(string name){
         this->name = name;
-        cout << name << endl;
     }
-    /*
-    void check_info(){
-        cout << "Customer\t: " << customers[customer_counter].name << endl;
-        cout << "Customer id\t:" << customers[customer_counter].customer_id << endl;
+
+    void set_name(){
+        cout << "Enter customer first name: "; cin >> fname;
+        cout << "Enter customer last name: "; cin >> lname;
     }
-    */
-    
+
 };
 
 class Debt{
@@ -43,7 +47,7 @@ class Debt{
 
 };
 
-class Account: public Customer{
+class Account{
     public:
     Customer owner;
     int account_no, daily_transactions{};
@@ -76,7 +80,6 @@ class Current_account: public Account{
     
     Current_account(Customer owner){
         this->owner = owner;
-        customer_no += 1;
     }
 
     Current_account(double amount){
@@ -97,7 +100,7 @@ class Current_account: public Account{
         }
         if (balance >= amount){
             balance -= amount;
-            cout << "Withdrawn " << amount << " NGN from " << name << "." << endl;
+            cout << "Withdrawn " << amount << " NGN from " << owner.name << "." << endl;
             daily_transactions += 1;
             return true;
         }
@@ -119,14 +122,14 @@ class Savings_account: public Account{
         }
         if (balance >= amount && daily_transactions <= transaction_limit){
             balance -= amount;
-            cout << "Withdrawn " << amount << " NGN from " << name << "." << endl;
+            cout << "Withdrawn " << amount << " NGN from " << owner.name << "." << endl;
             daily_transactions += 1;
             return true;
         }
 
         else if (balance >= amount && daily_transactions <= 3){
             balance -= amount + 50; //transaction fee over daily limit for savings account
-            cout << "Withdrawn " << amount << " NGN from " << name << "." << endl;
+            cout << "Withdrawn " << amount << " NGN from " << owner.name << "." << endl;
             daily_transactions += 1;
             return true;
         }
@@ -141,17 +144,16 @@ class Savings_account: public Account{
 void main_menu();
 void new_vs_existing();
 int get_id();
+double get_worth(int customer_id);
 void new_account_menu(int customer_id);
 void starting_deposit(int customer_id, Account *accounts);
 void new_customer();
+void manage_customer();
 bool transfer(Account &giver, Account &receiver, double amount);
 
-enum customer_type {Individual, Business};
-int customer_no{}, curr_acc_no = 100, sav_acc_no = 200, current_customer{};
-//Current account number start from 100, savings start from 200
-int customer_counter{};
-Customer customers[200];
 
+//arrays containing relevant objects
+Customer customers[100];
 Savings_account savings_accounts[50];
 Current_account current_accounts[50]; 
 
@@ -162,7 +164,6 @@ int main(){
     return 0;
 }
 
-
 void main_menu(){
     int selection;
     cout << "Welcome to G10 Bank! Please select an option" << endl;
@@ -172,6 +173,11 @@ void main_menu(){
     switch(selection){
         case 1:{
             new_vs_existing();
+            break;
+        }
+        
+        case 2:{
+            manage_customer();
             break;
         }
     };
@@ -200,8 +206,7 @@ int get_id(){
 
     cout << "Enter customer ID" << endl;
     cin >> id;
-
-    return id;
+    return id-1; //0 indexed
 }
 
 void new_account_menu(int customer_id){
@@ -212,23 +217,23 @@ void new_account_menu(int customer_id){
     
     switch(selection){
         case 1:{
-            curr_acc_no += 1;
-            current_accounts[customer_id-1].account_no = curr_acc_no; //assign account number
-            current_accounts[customer_id-1].owner = customers[current_customer]; //assign owner
-            starting_deposit(customer_id, current_accounts);
+            curr_acc_no += 1; //increment the number of current accounts
+            current_accounts[curr_acc_no-101].account_no = curr_acc_no; //assign latest account number
+            current_accounts[curr_acc_no-101].owner = customers[customer_id]; //assign owner
+            starting_deposit(curr_acc_no-101, current_accounts);//0 index
             break;
         }
 
         case 2:{
-            sav_acc_no += 1;
-            current_accounts[customer_id-1].account_no = sav_acc_no; //assign account number
-            current_accounts[customer_id-1].owner = customers[current_customer]; //assign owner
-            starting_deposit(customer_id, current_accounts);
+            sav_acc_no += 1; //increment the number of savings accounts
+            savings_accounts[sav_acc_no-201].account_no = sav_acc_no; //assign account number
+            savings_accounts[sav_acc_no-201].owner = customers[customer_id]; //assign owner
+            starting_deposit(sav_acc_no-201, savings_accounts);
         }
     }
 }
 
-void starting_deposit(int customer_id, Account *account){
+void starting_deposit(int acc_no, Account *account){
     int selection;
     cout << "Would you like to put in a starting deposit? (min value: 1000 NGN)\n" << endl;
     cout << "\t\t(1) Yes\t (2) No" << endl;
@@ -241,31 +246,36 @@ void starting_deposit(int customer_id, Account *account){
             cin >> start_balance;
 
             if (start_balance >= 1000){
-                (account+customer_id-1)->balance = start_balance;
-                cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
-                cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
-                cout << "Acct No: " << (account+customer_id-1)->account_no << endl;
-                main_menu();
+                (account+acc_no)->balance = start_balance;
+                cout << "Opened a new account for " << (account+acc_no)->owner.name;
+                cout << " with starting deposit of " << (account+acc_no)->balance << " NGN." << endl;
+                cout << "Acct No: " << (account+acc_no)->account_no << endl;
+                main_menu(); //return to the main menu
                 break;
             }
 
             else{
                 cout << "Invalid starting deposit. Setting starting deposit as 0 NGN." << endl;
-            }
+            }//intentional fallthrough
         }
 
         case 2:{
-            (account+customer_id)->balance = 0;
-            cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
-            cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
+            (account+acc_no)->balance = 0;
+            cout << "Opened a new account for " << (account+acc_no)->owner.name;
+            cout << " with starting deposit of " << (account+acc_no)->balance << " NGN." << endl;
+            cout << "Acct No: " << (account+acc_no)->account_no << endl;
+            main_menu(); //return to the main menu
             break;
         }
                 
         default:{
             cout << "Setting starting deposit as 0 NGN" << endl;
-            (account+customer_id)->balance = 0;
-            cout << "Opened a new account for " << (account+customer_id-1)->owner.name;
-            cout << " with starting deposit of " << (account+customer_id-1)->balance << " NGN." << endl;
+            (account+acc_no)->balance = 0;
+            cout << "Opened a new account for " << (account+acc_no)->owner.name;
+            cout << " with starting deposit of " << (account+acc_no)->balance << " NGN." << endl;
+            cout << "Acct No: " << (account+acc_no)->account_no << endl;
+            main_menu(); //return to the main menu
+            break;
         };
     }
 }
@@ -274,20 +284,58 @@ void new_customer(){
     string fname;
     string lname;
 
-    customer_counter += 1; //increment the number of active customers in the bank
-    customers[customer_counter].customer_id = customer_counter; //set the customer id as latest customer
-    current_customer = customers[customer_counter].customer_id; //set the customer for actions to be taken on
+    customer_no += 1; //increment the number of active customers in the bank
+    customers[customer_no-1].customer_id = customer_no; //set the customer id as latest customer
+    //set the customer for actions to be taken on, (0 indexing in customer array)
+    current_customer = customers[customer_no-1].customer_id - 1; 
 
     cout << "Enter customer first name: "; cin >> fname;
     cout << "Enter customer last name: "; cin >> lname;
 
     customers[current_customer].set_name(fname + " " + lname); //set customer name
-
-    cout << "Customer\t: " << customers[customer_counter].name << endl;
-    cout << "Customer id\t: " << customers[customer_counter].customer_id << endl;
+    
     //Display new customer info
+    cout << "Customer\t: " << customers[current_customer].name << endl;
+    cout << "Customer id\t: " << customers[current_customer].customer_id << endl;
 
     new_account_menu(current_customer); //create account for customer
+}
+
+void manage_customer(){
+    int selection, id = get_id();
+    cout << "\t\t(1)Check Total Balance \t(2)" << endl;
+
+    cin >> selection;
+
+    switch(selection){
+        case 1:{
+            cout << customers[id].name << " has a total balance of " << endl;
+            cout << get_worth(id) << " NGN." << endl;
+            main_menu();
+            break;
+        }
+    }
+};
+
+double get_worth(int customer_id){
+    double worth{};
+    for(Current_account acc: current_accounts){
+        if(acc.owner.customer_id == customer_id+1){// 0 index correction
+            worth += acc.balance;
+        }
+        else{
+            continue;
+        }
+    }
+    for(Savings_account acc: savings_accounts){
+        if(acc.owner.customer_id == customer_id+1){
+            worth += acc.balance;
+        }
+        else{
+            continue;
+        }
+    }
+    return worth;
 }
 
 bool transfer(Account &giver, Account &receiver, double amount){
