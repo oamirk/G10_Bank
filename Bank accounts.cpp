@@ -26,7 +26,9 @@ class Customer{
     Customer(){
         this->entity = customer_type::Individual;
     }
-
+    Customer(string name){
+        this->name = name;
+    }
     void set_name(string name){
         this->name = name;
     }
@@ -54,11 +56,30 @@ class Account{
     double balance{};
 
     virtual bool withdraw(double amount) = 0;
+
+    bool deposit(){
+        double amount;
+        cout << "Enter Amount to deposit: " << endl;
+        cin >> amount;
+        if (amount > 0){
+            balance += amount;
+            cout << "Deposited " << amount << " NGN to " << owner.name << "." << endl;
+            cout << "Acct no: " << account_no << endl;
+            cout << "Balance: " << balance << " NGN" << endl;
+            return true;
+        }
+        else{
+            cout << "Deposit failed! Invalid amount" << endl;
+            return false;
+        }
+    }
     
     bool deposit(double amount){
         if (amount > 0){
             balance += amount;
-            cout << "Deposited " << amount << " NGN to " << owner.name << "." << endl;
+            cout << "Deposited " << amount << " NGN to " << owner.name;
+            cout << ". Acct no: " << account_no << endl;
+            cout << "Balance: " << balance << " NGN" << endl;
             return true;
         }
         else{
@@ -76,8 +97,10 @@ class Account{
 
 class Current_account: public Account{
     public:
-    Current_account(){} //empty default constructor
-    
+    Current_account(){ //empty default constructor
+        this->owner = owner;
+        this->balance = 0;
+    }
     Current_account(Customer owner){
         this->owner = owner;
     }
@@ -90,8 +113,6 @@ class Current_account: public Account{
         this->owner = owner;
         balance = amount;
     }
-
-    void set_name(string account_name){}
     
     bool withdraw(double amount) override{
         if (amount < 200){
@@ -149,6 +170,7 @@ void new_account_menu(int customer_id);
 void starting_deposit(int customer_id, Account *accounts);
 void new_customer();
 void manage_customer();
+void transaction_menu();
 bool transfer(Account &giver, Account &receiver, double amount);
 
 
@@ -180,6 +202,11 @@ void main_menu(){
             manage_customer();
             break;
         }
+
+        case 3:{
+            transaction_menu();
+            break;
+        }
     };
 }
 
@@ -207,6 +234,14 @@ int get_id(){
     cout << "Enter customer ID" << endl;
     cin >> id;
     return id-1; //0 indexed
+}
+
+int get_acc_no(){
+    int id;
+
+    cout << "Enter Acct No:" << endl;
+    cin >> id;
+    return id;
 }
 
 void new_account_menu(int customer_id){
@@ -303,13 +338,13 @@ void new_customer(){
 
 void manage_customer(){
     int selection, id = get_id();
-    cout << "\t\t(1)Check Total Balance \t(2)" << endl;
+    cout << "\t\t(1)Check Total Balance \t(2)Rename Account \t(3)" << endl;
 
     cin >> selection;
 
     switch(selection){
         case 1:{
-            cout << customers[id].name << " has a total balance of " << endl;
+            cout << customers[id].name << " has a total balance of ";
             cout << get_worth(id) << " NGN." << endl;
             main_menu();
             break;
@@ -338,12 +373,56 @@ double get_worth(int customer_id){
     return worth;
 }
 
+void transaction_menu(){
+    int selection;
+    cout << "Select transaction type:" << endl;
+    cout << "\t\t(1) Deposit \t(2) Withdraw \t(3) Transfer\t (4) Main menu" << endl;
+
+    cin >> selection;
+    switch(selection){
+        case 1:{
+            int acc_no = get_acc_no();
+            //current accounts
+            for(int i = 0; i < 50; i++){
+                if(acc_no = (current_accounts+i)->account_no){
+                    (current_accounts+i)->deposit();
+                    main_menu();
+                    break;
+                }
+                else{
+                    continue;
+                }
+            }
+            //savings accounts
+            for(int i = 0; i < 50; i++){
+                if(acc_no = (savings_accounts+i)->account_no){
+                    (savings_accounts+i)->deposit();
+                    main_menu();
+                    break;
+                }
+                else{
+                    continue;
+                }
+            }
+            cout << "Invalid account number" << endl; //doesn't find account
+            main_menu();
+            break;
+        }
+        /*case 2:
+        
+        case 3:
+        case 4:
+        default:{}*/
+    }
+}
+
 bool transfer(Account &giver, Account &receiver, double amount){
     if (giver.withdraw(amount)){
         receiver.deposit(amount);
         cout << "Transferred " << amount << " NGN from ";
         cout << giver.owner.name << " to " << receiver.owner.name << endl;
         giver.balance_check();
+        receiver.balance_check();
 
         return true;
     }
