@@ -408,8 +408,42 @@ void transaction_menu(){
             main_menu();
             break;
         }
-        /*case 2:
-        
+
+        case 2:{
+            int acc_no = get_acc_no();
+            //current accounts
+            for(int i = 0; i < 50; i++){
+                if(acc_no = (current_accounts+i)->account_no){
+                    double amount; 
+                    cout<< "Enter amount to withdraw: ";
+                    cin >> amount;
+                    (current_accounts+i)->withdraw(amount);
+                    main_menu();
+                    break;
+                }
+                else{
+                    continue;
+                }
+            }
+            //savings accounts
+            for(int i = 0; i < 50; i++){
+                if(acc_no = (savings_accounts+i)->account_no){
+                    double amount; 
+                    cout<< "Enter amount to withdraw: ";
+                    cin >> amount;
+                    (current_accounts+i)->withdraw(amount);
+                    main_menu();
+                    break;
+                }
+                else{
+                    continue;
+                }
+            }
+            cout << "Invalid account number" << endl; //doesn't find account
+            main_menu();
+            break;
+        }
+        /*
         case 3:
         case 4:
         default:{}*/
